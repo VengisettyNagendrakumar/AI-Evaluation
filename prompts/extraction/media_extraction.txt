@@ -1,0 +1,12 @@
+Analyze the uploaded media carefully.
+
+Extract:
+- visible text
+- code
+- UI elements
+- diagrams
+- architecture details
+- errors
+- technical information
+
+Return structured extracted content only.

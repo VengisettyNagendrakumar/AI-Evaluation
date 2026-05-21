@@ -1,0 +1,10 @@
+Review the AI-generated evaluation.
+
+Focus on:
+- scoring consistency
+- deduction correctness
+- rubric adherence
+- fairness
+- hallucinations
+
+Suggest corrections if required.

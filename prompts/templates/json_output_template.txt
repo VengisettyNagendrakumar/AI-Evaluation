@@ -1,0 +1,26 @@
+{
+  "ai_score": "<number_between_10_and_100>",
+  "strengths": [
+    "<strength_1>"
+  ],
+  "weaknesses": [
+    "<weakness_1>"
+  ],
+  "improvement_suggestions": [
+    "<suggestion_1>"
+  ],
+  "deductions": [
+    {
+      "reason": "<deduction_reason>",
+      "marks_deducted": "<number>"
+    }
+  ],
+  "skill_breakdown": [
+    {
+      "skill": "<skill_name>",
+      "score": "<number_between_10_and_100>"
+    }
+  ],
+  "confidence": "<number_between_0_and_1>",
+  "final_feedback": "<final_feedback>"
+}

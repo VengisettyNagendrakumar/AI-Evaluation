@@ -1,0 +1,58 @@
+# PYTHON
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VIRTUAL ENVIRONMENT
+
+myenv/
+venv/
+.env/
+
+# ENV FILES
+
+.env
+.env.local
+.env.production
+
+# LOGS
+
+logs/
+*.log
+
+# UPLOADS
+
+temp_downloads/
+
+# IDE
+
+.vscode/
+.idea/
+
+# OS FILES
+
+.DS_Store
+Thumbs.db
+
+# TEST CACHE
+
+.pytest_cache/
+
+# BUILD FILES
+
+dist/
+build/
+*.egg-info/
+
+# JUPYTER
+
+.ipynb_checkpoints/
+
+load_tests/
+tests/
+requirements-dev.txt
+
+
+app/frontend/
