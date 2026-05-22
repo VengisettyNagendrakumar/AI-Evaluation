@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     # APP CONFIG
     APP_NAME: str = "AI Evaluation System"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
     ENVIRONMENT: str = "production"
 
     @field_validator("DEBUG", mode="before")
@@ -33,13 +33,15 @@ class Settings(BaseSettings):
 
     # API CONFIG
     # API SECURITY
-    API_KEY: str = "change-this-dev-key"
+    API_KEY: str = ""
     API_PREFIX: str = "/api/v1"
     ALLOWED_ORIGINS: list[str] = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:5500",
     "http://127.0.0.1:5500",
+    "null",   # ← file:// pages send Origin: null
+    "*",      # ← fallback wildcard
 ]
 
     # GROQ CONFIG

@@ -1813,9 +1813,9 @@ class EvaluationService:
 
     # CONFIG
 
-    MAX_TOTAL_CONTENT = 30000
+    MAX_TOTAL_CONTENT = 25000
 
-    MAX_FILE_CONTENT = 15000
+    MAX_FILE_CONTENT = 10000
 
     EXTRACTION_TIMEOUT_SECONDS = 30
 
@@ -2060,13 +2060,13 @@ class EvaluationService:
                     ):
 
                         os.remove(
-                            file_path
+                            local_file_path
                         )
 
                         logger.info(
                             (
                                 "Temporary uploaded "
-                                f"file deleted: {file_path}"
+                                f"file deleted: {local_file_path}"
                             )
                         )
 
@@ -2510,6 +2510,99 @@ RETURN JSON IN THIS FORMAT:
         except:
 
             return fallback
+
+    def _manual_review_result(
+        self,
+        request: EvaluationRequest,
+        reason: str,
+        evaluation_version: int = 1,
+        reevaluation_count: int = 0,
+        is_reevaluated: bool = False,
+        reevaluated_at = None,
+        evaluation_duration_seconds: float = 0
+    ) -> EvaluationResult:
+
+        return EvaluationResult(
+
+            ai_score=0,
+
+            confidence=0.0,
+
+            strengths=[],
+
+            weaknesses=[],
+
+            improvement_suggestions=[],
+
+            final_feedback=(
+                f"{reason} Submission forwarded "
+                "for instructor review."
+            ),
+
+            deductions=[],
+
+            skill_breakdown=[],
+
+            provider=None,
+
+            model=None,
+
+            prompt_tokens=0,
+
+            completion_tokens=0,
+
+            total_tokens=0,
+
+            evaluation_id=(
+                f"eval_{int(time.time() * 1000)}"
+            ),
+
+            evaluation_version=(
+                evaluation_version
+            ),
+
+            reevaluation_count=(
+                reevaluation_count
+            ),
+
+            previous_evaluation_id=(
+                request.previous_evaluation_id
+            ),
+
+            reevaluated_at=(
+                reevaluated_at
+            ),
+
+            is_reevaluated=(
+                is_reevaluated
+            ),
+
+            prompt_version=(
+                self.PROMPT_VERSION
+            ),
+
+            evaluator_version=(
+                self.EVALUATOR_VERSION
+            ),
+
+            provider_latency_seconds=0,
+
+            evaluation_duration_seconds=(
+                evaluation_duration_seconds
+            ),
+
+            evaluation_status=(
+                "manual_review"
+            ),
+
+            requires_manual_review=True,
+
+            manual_review_reason=(
+                reason
+            ),
+
+            blurry_file_detected=False
+        )
 
     # GROQ EVALUATION
 
@@ -3172,6 +3265,10 @@ RETURN JSON IN THIS FORMAT:
             "Starting evaluation"
         )
 
+        evaluation_start_time = (
+            time.time()
+        )
+
         # REEVALUATION LOOKUP
 
         previous_evaluation = None
@@ -3363,12 +3460,52 @@ RETURN JSON IN THIS FORMAT:
 
             logger.exception(
                 (
-                    "Evaluation pipeline failed: "
+                    "Evaluation pipeline failed. "
+                    "Forwarding to manual review: "
                     f"{str(evaluation_error)}"
                 )
             )
 
-            raise
+            evaluation_duration = round(
+
+                time.time()
+                - evaluation_start_time,
+
+                2
+            )
+
+            groq_result = (
+                self._manual_review_result(
+
+                    request=request,
+
+                    reason=(
+                        "AI provider is temporarily "
+                        "unavailable or failed to "
+                        "complete the evaluation."
+                    ),
+
+                    evaluation_version=(
+                        evaluation_version
+                    ),
+
+                    reevaluation_count=(
+                        reevaluation_count
+                    ),
+
+                    is_reevaluated=(
+                        is_reevaluated
+                    ),
+
+                    reevaluated_at=(
+                        reevaluated_at
+                    ),
+
+                    evaluation_duration_seconds=(
+                        evaluation_duration
+                    )
+                )
+            )
 
         logger.info(
             "Evaluation completed"
@@ -3428,6 +3565,10 @@ RETURN JSON IN THIS FORMAT:
 
             "total_tokens": (
                 groq_result.total_tokens
+            ),
+
+            "final_feedback": (
+                groq_result.final_feedback
             ),
 
             "extracted_files_count": (

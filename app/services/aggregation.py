@@ -76,16 +76,26 @@ class AggregationService:
             / len(confidence_scores)
         )
 
-        unique_providers = list(
-            set(providers)
-        )
+        unique_providers = list(set(
 
-        unique_models = list(
-            set(models)
-        )
+            provider
+            for provider in providers
+            if provider
+        ))
+
+        unique_models = list(set(
+
+            model
+            for model in models
+            if model
+        ))
 
         provider_text = (
             ", ".join(unique_providers)
+        )
+
+        model_text = (
+            ", ".join(unique_models)
         )
 
         return {
@@ -117,13 +127,16 @@ class AggregationService:
             ),
 
             "final_feedback": (
+
                 f"Evaluation completed using "
                 f"{provider_text}."
+
+                if provider_text
+
+                else "Evaluation completed."
             ),
 
             "provider": provider_text,
 
-            "model": ", ".join(
-                unique_models
-            )
+            "model": model_text
         }

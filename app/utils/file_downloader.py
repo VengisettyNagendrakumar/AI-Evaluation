@@ -66,6 +66,31 @@ class FileDownloader:
     CHUNK_SIZE = 1024 * 1024
 
     @classmethod
+    def _is_allowed_domain(
+        cls,
+        domain: str
+    ) -> bool:
+
+        domain = (
+            domain
+            .lower()
+            .strip()
+        )
+
+        return any(
+
+            domain == allowed
+
+            or domain.endswith(
+                f".{allowed}"
+            )
+
+            for allowed in (
+                cls.ALLOWED_DOMAINS
+            )
+        )
+
+    @classmethod
     async def download_file(
         cls,
         file_url: str
@@ -84,21 +109,22 @@ class FileDownloader:
                 file_url
             )
 
-            domain = (
-                parsed_url.netloc
-                .lower()
-            )
+            if parsed_url.scheme != "https":
 
-            allowed_domain = any(
-
-                allowed in domain
-
-                for allowed in (
-                    cls.ALLOWED_DOMAINS
+                logger.warning(
+                    "Blocked non-HTTPS file URL."
                 )
+
+                return ""
+
+            domain = (
+                parsed_url.hostname
+                or ""
             )
 
-            if not allowed_domain:
+            if not cls._is_allowed_domain(
+                domain
+            ):
 
                 logger.warning(
                     (

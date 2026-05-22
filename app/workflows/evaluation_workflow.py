@@ -73,6 +73,7 @@ class EvaluationWorkflow:
             ConfidenceService.requires_human_review(
                 evaluation_result.confidence
             )
+            or evaluation_result.requires_manual_review
         )
 
         workflow_result = {
@@ -83,6 +84,14 @@ class EvaluationWorkflow:
 
             "requires_human_review": (
                 requires_review
+            ),
+
+            "requires_manual_review": (
+                requires_review
+            ),
+
+            "manual_review_reason": (
+                evaluation_result.manual_review_reason
             ),
 
             "workflow_status": "completed",

@@ -8,6 +8,8 @@ from fastapi import (
 from fastapi.middleware.cors import (
     CORSMiddleware
 )
+from app.middleware.body_size_middleware import BodySizeLimitMiddleware
+
 
 from app.api.evaluate import (
     router as evaluation_router
@@ -62,7 +64,10 @@ app = FastAPI(
     debug=settings.DEBUG
 )
 
-
+app.add_middleware(
+    BodySizeLimitMiddleware,
+    max_body_size=2 * 1024 * 1024
+)
 # EXCEPTION HANDLERS
 
 app.add_exception_handler(

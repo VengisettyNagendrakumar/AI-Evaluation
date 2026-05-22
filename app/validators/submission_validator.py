@@ -61,6 +61,71 @@ class SubmissionValidator:
     }
 
     @classmethod
+    def _validate_file_reference(
+        cls,
+        file_path: str
+    ) -> tuple[Path, str, bool]:
+
+        parsed_url = urlparse(
+            file_path
+        )
+
+        if parsed_url.scheme in {
+            "http",
+            "https"
+        }:
+
+            if parsed_url.scheme != "https":
+
+                raise EvaluationException(
+                    "Only HTTPS file URLs are allowed."
+                )
+
+            if not parsed_url.netloc:
+
+                raise EvaluationException(
+                    "Invalid file URL."
+                )
+
+            url_path = Path(
+                parsed_url.path
+            )
+
+            return (
+                url_path,
+                url_path.suffix.lower(),
+                True
+            )
+
+        if parsed_url.scheme:
+
+            raise EvaluationException(
+                "Unsupported file reference scheme."
+            )
+
+        local_path = Path(
+            file_path
+        )
+
+        if local_path.is_absolute():
+
+            raise EvaluationException(
+                "Absolute local file paths are not allowed."
+            )
+
+        if ".." in local_path.parts:
+
+            raise EvaluationException(
+                "Parent directory traversal is not allowed."
+            )
+
+        return (
+            local_path,
+            local_path.suffix.lower(),
+            False
+        )
+
+    @classmethod
     def validate_submission(
         cls,
         request
@@ -329,19 +394,10 @@ class SubmissionValidator:
 
                 continue
 
-            
-            parsed_url = urlparse(
-                file_path
-            )
-
-            cleaned_path = (
-                parsed_url.path
-            )
-
-            extension = (
-                Path(cleaned_path)
-                .suffix
-                .lower()
+            file_reference_path, extension, is_remote_file = (
+                cls._validate_file_reference(
+                    cleaned_path
+                )
             )
 
             if extension not in (
@@ -358,13 +414,13 @@ class SubmissionValidator:
             # LOCAL FILE SIZE VALIDATION
 
             if (
-                not cleaned_path.startswith("http")
-                and Path(cleaned_path).exists()
+                not is_remote_file
+                and file_reference_path.exists()
             ):
 
                 file_size_mb = (
 
-                    Path(cleaned_path)
+                    file_reference_path
                     .stat()
                     .st_size
 
@@ -379,7 +435,7 @@ class SubmissionValidator:
                         (
                             f"File size exceeds "
                             f"{cls.MAX_FILE_SIZE_MB} MB "
-                            f"limit: {cleaned_path}"
+                            f"limit: {file_reference_path}"
                         )
                     )
 
