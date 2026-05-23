@@ -1,4 +1,3 @@
-
 # import os
 # import time
 # import asyncio
@@ -30,7 +29,6 @@
 # from app.utils.retry import (
 #     RetryHandler
 # )
-
 # from app.repositories.evaluation_repository import (
 #     EvaluationRepository
 # )
@@ -41,6 +39,9 @@
 
 # from app.services.aggregation import (
 #     AggregationService
+# )
+# from app.utils.file_downloader import (
+#     FileDownloader
 # )
 
 # from app.extractors.file_extractor import (
@@ -130,13 +131,60 @@
 #                         f"{file_path}"
 #                     )
 #                 )
+                
+#                 local_file_path = file_path
+
+#                 # DOWNLOAD S3 PRESIGNED URL
+
+#                 if (
+#                     str(file_path).startswith("http://")
+#                     or str(file_path).startswith("https://")
+#                 ):
+
+#                     logger.info(
+#                         (
+#                             "Downloading remote file: "
+#                             f"{file_path}"
+#                         )
+#                     )
+
+#                     downloaded_file = (
+#                         await FileDownloader.download_file(
+#                             file_path
+#                         )
+#                     )
+
+#                     if not downloaded_file:
+
+#                         return {
+
+#                             "file_path": file_path,
+
+#                             "content": "",
+
+#                             "success": False,
+
+#                             "warning": (
+#                                 "Failed to download remote file."
+#                             ),
+
+#                             "blurry_detected": False,
+
+#                             "timeout": False,
+
+#                             "duration": None
+#                         }
+
+#                     local_file_path = downloaded_file
+
+#                 # EXTRACT FILE
 
 #                 extracted_content = (
 #                     await asyncio.wait_for(
 
 #                         asyncio.to_thread(
 #                             FileExtractor.extract,
-#                             file_path
+#                             local_file_path
 #                         ),
 
 #                         timeout=(
@@ -257,20 +305,21 @@
 
 #                 try:
 
+                    
 #                     if (
-#                         file_path
-#                         and not str(file_path).startswith("http")
-#                         and os.path.exists(file_path)
+#                         'local_file_path' in locals()
+#                         and local_file_path
+#                         and os.path.exists(local_file_path)
 #                     ):
 
 #                         os.remove(
-#                             file_path
+#                             local_file_path
 #                         )
 
 #                         logger.info(
 #                             (
 #                                 "Temporary uploaded "
-#                                 f"file deleted: {file_path}"
+#                                 f"file deleted: {local_file_path}"
 #                             )
 #                         )
 
@@ -714,6 +763,99 @@
 #         except:
 
 #             return fallback
+
+#     def _manual_review_result(
+#         self,
+#         request: EvaluationRequest,
+#         reason: str,
+#         evaluation_version: int = 1,
+#         reevaluation_count: int = 0,
+#         is_reevaluated: bool = False,
+#         reevaluated_at = None,
+#         evaluation_duration_seconds: float = 0
+#     ) -> EvaluationResult:
+
+#         return EvaluationResult(
+
+#             ai_score=0,
+
+#             confidence=0.0,
+
+#             strengths=[],
+
+#             weaknesses=[],
+
+#             improvement_suggestions=[],
+
+#             final_feedback=(
+#                 f"{reason} Submission forwarded "
+#                 "for instructor review."
+#             ),
+
+#             deductions=[],
+
+#             skill_breakdown=[],
+
+#             provider=None,
+
+#             model=None,
+
+#             prompt_tokens=0,
+
+#             completion_tokens=0,
+
+#             total_tokens=0,
+
+#             evaluation_id=(
+#                 f"eval_{int(time.time() * 1000)}"
+#             ),
+
+#             evaluation_version=(
+#                 evaluation_version
+#             ),
+
+#             reevaluation_count=(
+#                 reevaluation_count
+#             ),
+
+#             previous_evaluation_id=(
+#                 request.previous_evaluation_id
+#             ),
+
+#             reevaluated_at=(
+#                 reevaluated_at
+#             ),
+
+#             is_reevaluated=(
+#                 is_reevaluated
+#             ),
+
+#             prompt_version=(
+#                 self.PROMPT_VERSION
+#             ),
+
+#             evaluator_version=(
+#                 self.EVALUATOR_VERSION
+#             ),
+
+#             provider_latency_seconds=0,
+
+#             evaluation_duration_seconds=(
+#                 evaluation_duration_seconds
+#             ),
+
+#             evaluation_status=(
+#                 "manual_review"
+#             ),
+
+#             requires_manual_review=True,
+
+#             manual_review_reason=(
+#                 reason
+#             ),
+
+#             blurry_file_detected=False
+#         )
 
 #     # GROQ EVALUATION
 
@@ -1376,6 +1518,10 @@
 #             "Starting evaluation"
 #         )
 
+#         evaluation_start_time = (
+#             time.time()
+#         )
+
 #         # REEVALUATION LOOKUP
 
 #         previous_evaluation = None
@@ -1567,12 +1713,52 @@
 
 #             logger.exception(
 #                 (
-#                     "Evaluation pipeline failed: "
+#                     "Evaluation pipeline failed. "
+#                     "Forwarding to manual review: "
 #                     f"{str(evaluation_error)}"
 #                 )
 #             )
 
-#             raise
+#             evaluation_duration = round(
+
+#                 time.time()
+#                 - evaluation_start_time,
+
+#                 2
+#             )
+
+#             groq_result = (
+#                 self._manual_review_result(
+
+#                     request=request,
+
+#                     reason=(
+#                         "AI provider is temporarily "
+#                         "unavailable or failed to "
+#                         "complete the evaluation."
+#                     ),
+
+#                     evaluation_version=(
+#                         evaluation_version
+#                     ),
+
+#                     reevaluation_count=(
+#                         reevaluation_count
+#                     ),
+
+#                     is_reevaluated=(
+#                         is_reevaluated
+#                     ),
+
+#                     reevaluated_at=(
+#                         reevaluated_at
+#                     ),
+
+#                     evaluation_duration_seconds=(
+#                         evaluation_duration
+#                     )
+#                 )
+#             )
 
 #         logger.info(
 #             "Evaluation completed"
@@ -1632,6 +1818,10 @@
 
 #             "total_tokens": (
 #                 groq_result.total_tokens
+#             ),
+
+#             "final_feedback": (
+#                 groq_result.final_feedback
 #             ),
 
 #             "extracted_files_count": (
@@ -1741,10 +1931,6 @@
 #         )
 
 #         return evaluation_result
-
-
-
-
 import os
 import time
 import asyncio
@@ -1813,13 +1999,17 @@ class EvaluationService:
 
     # CONFIG
 
-    MAX_TOTAL_CONTENT = 25000
+    MAX_TOTAL_CONTENT = 35000
 
-    MAX_FILE_CONTENT = 10000
+    MAX_FILE_CONTENT = 20000
 
     EXTRACTION_TIMEOUT_SECONDS = 30
 
     MAX_CONCURRENT_EXTRACTIONS = 3
+    
+    SUMMARY_TRIGGER_LENGTH = 8000
+
+    SUMMARY_MAX_OUTPUT = 5000
 
     PROMPT_VERSION = "v1"
 
@@ -1857,6 +2047,94 @@ class EvaluationService:
             return file.read()
 
     # SAFE FILE EXTRACTION
+    async def _summarize_large_content(
+        self,
+        content: str
+    ) -> str:
+
+        try:
+
+            logger.info(
+                "Starting large content summarization."
+            )
+            content = content[:15000]
+
+            summary_prompt = f"""
+            You are a technical summarization AI.
+
+            Summarize the following student submission.
+
+            IMPORTANT:
+            - Preserve important implementation details
+            - Preserve architecture
+            - Preserve APIs
+            - Preserve technical decisions
+            - Preserve business logic
+            - Preserve important algorithms
+            - Preserve project structure
+            - Preserve technologies used
+            - Preserve database details
+            - Preserve deployment details
+            - Preserve evaluation-relevant information
+
+            DO NOT:
+            - Add hallucinations
+            - Add assumptions
+            - Remove important technical content
+            - Generate generic summaries
+
+            Generate a concise but technically complete summary.
+
+            CONTENT:
+            {content}
+            """
+
+            response = await self.groq_provider.generate(
+
+                prompt=summary_prompt,
+
+                system_prompt=(
+                    "You are an expert technical summarizer."
+                ),
+
+                complexity=(
+                    ModelComplexity.SIMPLE
+                )
+            )
+
+            summarized_content = (
+                response.raw_response.strip()
+            )
+
+            summarized_content = (
+                summarized_content[
+                    :self.SUMMARY_MAX_OUTPUT
+                ]
+            )
+
+            logger.info(
+                (
+                    "Content summarization completed | "
+                    f"Original Length: {len(content)} | "
+                    f"Summary Length: "
+                    f"{len(summarized_content)}"
+                )
+            )
+
+            return summarized_content
+
+        except Exception as error:
+
+            logger.exception(
+                (
+                    "Content summarization failed: "
+                    f"{str(error)}"
+                )
+            )
+
+            return content[
+                :self.SUMMARY_MAX_OUTPUT
+            ]
 
     async def _safe_extract_file(
         self,
@@ -2622,6 +2900,23 @@ RETURN JSON IN THIS FORMAT:
                 request
             )
         )
+        if (
+            len(extracted_file_content)
+            > self.SUMMARY_TRIGGER_LENGTH
+        ):
+
+            logger.info(
+                (
+                    "Large extracted content detected. "
+                    "Starting summarization."
+                )
+            )
+
+            extracted_file_content = (
+                await self._summarize_large_content(
+                    extracted_file_content
+                )
+            )
 
         system_prompt, user_prompt = (
             self._build_prompt(

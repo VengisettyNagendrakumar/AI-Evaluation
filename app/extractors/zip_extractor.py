@@ -21,31 +21,128 @@ class ZIPExtractor:
         ".ts",
         ".tsx",
         ".jsx",
+
         ".java",
         ".kt",
+        ".swift",
+
         ".go",
+
         ".cpp",
         ".c",
+        ".h",
+
         ".rs",
+
+        ".cs",
+
+        ".php",
+
+        ".rb",
+
+        ".scala",
+
+        ".html",
+        ".css",
+        ".scss",
+
+        ".sql",
+
         ".json",
+
         ".yaml",
         ".yml",
-        ".sql",
-        ".md"
+
+        ".xml",
+
+        ".md",
+
+        ".txt",
+        ".ipynb"
     }
 
     SKIP_FOLDERS = {
 
         "node_modules",
+
         "venv",
         "myenv",
+        ".venv",
+
         "__pycache__",
+
         ".git",
+
         "dist",
         "build",
+
         ".next",
+
+        "coverage",
+
+        "target",
+
+        "bin",
+        "obj",
+
+        ".idea",
+        ".vscode",
+
+        "vendor",
+
+        "Pods",
+
+        ".gradle",
+
+        "out",
+
+        "tmp",
+
+        "logs",
+         ".github",
+        ".gitlab-ci",
+        ".circleci",
+        "docker", ".docker",
+        "kubernetes", ".k8s",
+        "migrations",
+        "static", "public", "assets", "media",
+        "uploads",
+        ".cache", "cache", ".npm", ".yarn", ".pnpm",
+        ".m2",
+        "temp", ".temp",
+        ".aws",
+        "venv_backup", "env_backup",
+        "scripts",
+    }
+
+    SKIP_FILES = {
+
+        "package-lock.json",
+        "requirements.txt",
+        "yarn.lock",
+        ".gitignore",
         ".env",
-        "coverage"
+        "pnpm-lock.yaml",
+
+        "bun.lockb",
+
+        "poetry.lock",
+
+        "Pipfile.lock",
+
+        ".DS_Store",
+         "Gemfile.lock",
+        ".npmrc", ".nvmrc", ".python-version", ".node-version",
+        "Makefile",
+        ".editorconfig",
+        ".eslintrc", ".eslintrc.json", ".eslintrc.js",
+        ".prettierrc", ".prettierrc.json",
+        "tsconfig.json", "webpack.config.js", "babel.config.js",
+        ".babelrc",
+        "docker-compose.yml", "Dockerfile",
+        ".env.example",
+        "LICENSE", "AUTHORS",
+        ".gitattributes",
     }
 
     MAX_FILES = 15
@@ -115,8 +212,6 @@ class ZIPExtractor:
                         Path(file_name).parts
                     )
 
-                    # SKIP FOLDERS
-
                     if any(
 
                         folder in path_parts
@@ -128,21 +223,27 @@ class ZIPExtractor:
 
                         continue
 
+                    clean_file_name = (
+                        Path(file_name).name
+                    )
+
+                    if clean_file_name in (
+                        cls.SKIP_FILES
+                    ):
+
+                        continue
+
                     extension = (
                         Path(file_name)
                         .suffix
                         .lower()
                     )
 
-                    # SKIP UNKNOWN FILES
-
                     if extension not in (
                         cls.ALLOWED_EXTENSIONS
                     ):
 
                         continue
-
-                    # SKIP LARGE FILES
 
                     if (
                         file_info.file_size
@@ -176,8 +277,6 @@ class ZIPExtractor:
 
                                 continue
 
-                            # LIMIT CONTENT
-
                             content = content[
                                 :cls
                                 .MAX_CHARACTERS_PER_FILE
@@ -210,8 +309,6 @@ ZIP FILE: {file_name}
                 combined_content.strip()
             )
 
-            # EMPTY EXTRACTION
-
             if not combined_content:
 
                 logger.warning(
@@ -231,8 +328,6 @@ ZIP FILE: {file_name}
                         "No readable ZIP content extracted."
                     )
                 }
-
-            # LOW QUALITY EXTRACTION
 
             if (
                 len(combined_content)

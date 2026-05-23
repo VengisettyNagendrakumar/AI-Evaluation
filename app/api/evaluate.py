@@ -89,13 +89,15 @@ async def evaluate_submission(
 
             message=(
 
-                workflow_result.get(
-                    "manual_review_reason",
-                    "Submission requires instructor review."
+                (
+                    workflow_result.get(
+                        "manual_review_reason"
+                    )
+                    or "Submission requires instructor review."
                 )
 
                 + " Submission forwarded "
-                "for instructor review."
+                  "for instructor review."
 
                 if workflow_result.get(
                     "requires_manual_review",
@@ -181,13 +183,15 @@ async def reevaluate_submission(
 
             message=(
 
-                workflow_result.get(
-                    "manual_review_reason",
-                    "Submission requires instructor review."
+                (
+                    workflow_result.get(
+                        "manual_review_reason"
+                    )
+                    or "Submission requires instructor review."
                 )
 
                 + " Submission forwarded "
-                "for instructor review."
+                  "for instructor review."
 
                 if workflow_result.get(
                     "requires_manual_review",

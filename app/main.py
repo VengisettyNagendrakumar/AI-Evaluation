@@ -98,7 +98,11 @@ app.add_middleware(
 
     allow_methods=["*"],
 
-    allow_headers=["*"],
+    allow_headers=[
+    "Content-Type",
+    "Authorization",
+    "X-API-Key"
+    ]
 )
 
 

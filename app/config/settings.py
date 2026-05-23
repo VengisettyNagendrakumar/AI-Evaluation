@@ -36,12 +36,9 @@ class Settings(BaseSettings):
     API_KEY: str = ""
     API_PREFIX: str = "/api/v1"
     ALLOWED_ORIGINS: list[str] = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "null",   # ← file:// pages send Origin: null
-    "*",      # ← fallback wildcard
+    "https://lms-backend-ra4z.onrender.com",
+    "https://api.placemux.com",
+    "http://localhost:3000",    
 ]
 
     # GROQ CONFIG
